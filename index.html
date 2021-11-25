@@ -1,0 +1,65 @@
+<script src="https://unpkg.com/blockly/blockly.min.js"></script>
+<script>
+function getbloccJson(name) {
+var data = fetch("./bloccs/"+name+"_blocc.json")
+	.then(res => {return res.json()})
+	.catch(error => console.log(error))
+return data
+}
+
+console.log(getbloccJson("function"))
+
+</script>
+<style>
+#workspacediv {
+	width: 100%;
+	height: 100%;
+}
+</style>
+<body>
+	<div id="workspacediv" style="position: fixed;"></div>
+	<xml id="toolbox" style="display: none">
+		<category name="New Line">
+			<block type="function_blocc"></block>
+		</category>
+		<category name="Actions">
+			<block type="playeraction_blocc"></block>
+		</category>
+	</xml>
+</body>
+
+<script>
+	Blockly.Blocks["function_blocc"] = {
+		init: function() {
+			this.jsonInit({
+				"type": "function",
+				"message0": "FUNCTION hidden %1 ? %2",
+				"args0": [
+				{
+					"type": "field_checkbox",
+					"name": "is variable hidden",
+					"checked": false
+				},
+				{
+					"type": "input_value",
+					"name": "Name",
+					"check": "String"
+				}
+				],
+					"colour": 225,
+					"tooltip": "New function",
+					"helpUrl": "https://github.com/userunp/dfscript"
+				})
+		}
+	};
+	Blockly.Blocks["playeraction_blocc"] = {
+		init: function() {
+			this.appendValueInput("VALUE").setCheck("String").appendField("length of");
+			this.setOutput(true, "Number");
+			this.setColour(160);
+			this.setTooltip("Do a player action");
+			this.setHelpUrl("");
+		}
+	};
+	var demoWorkspace = Blockly.inject("workspacediv", {toolbox: document.getElementById("toolbox")})
+</script>

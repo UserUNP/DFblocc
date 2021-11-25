@@ -1,0 +1,15 @@
+{
+  "type": "function",
+  "message0": "FUNCTION %1",
+  "args0": [
+    {
+      "type": "input_value",
+      "name": "Name",
+      "check": "String"
+    }
+  ],
+  "nextStatement": null,
+  "colour": 225,
+  "tooltip": "New function",
+  "helpUrl": "https://github.com/userunp/dfscript"
+}
