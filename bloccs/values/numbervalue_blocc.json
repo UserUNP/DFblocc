@@ -1,0 +1,24 @@
+{
+	"type": "numbervalue_blocc",
+	"message0": "%1 Number ❛❛ %2 ❟❟",
+	"args0": [
+		{
+			"type": "field_image",
+			"src": "https://raw.githubusercontent.com/Owen1212055/mc-assets/main/assets/SLIME_BALL.png",
+			"width": 25,
+			"height": 25,
+			"alt": "Text value",
+			"flipRtl": false
+		},
+		{
+			"type": "field_input",
+			"name": "value",
+			"text": "num"
+		}
+	],
+	"previousStatement": null,
+	"nextStatement": null,
+	"colour": "0x74bc6c",
+	"tooltip": "",
+	"helpUrl": ""
+}

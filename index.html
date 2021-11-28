@@ -1,13 +1,102 @@
 <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="./pako.js"></script>
 <script>
-function getbloccJson(name) {
-var data = fetch("./bloccs/"+name+"_blocc.json")
-	.then(res => {return res.json()})
-	.catch(error => console.log(error))
-return data
+var definedWorkspace = false;
+function oopsie(errmsg) {
+	if(document.getElementById("workspacediv") != null) {
+		document.getElementById("workspacediv").remove();
+	}
+	const popup = document.getElementById("errpop");
+	popup.querySelector("#errmsg").innerText = `${errmsg}`;
+	popup.style.display = "block";
+}
+function getbloccJson(name, callback) {
+	$.getJSON(`./bloccs/${name}_blocc.json`).then(callback).fail((_, status, err) => oopsie(`${status}: ${err}\ncontext: "${name}_blocc.json"`)).done(data => data);
+}
+function registerblocc(blocc, callback) {
+	var type;
+	if((typeof blocc) == "string") {
+		if(blocc.includes("value")) getbloccJson(`values/${blocc}`, data => Blockly.defineBlocksWithJsonArray([data]));
+		else getbloccJson(blocc, data => Blockly.defineBlocksWithJsonArray([data]));
+		type = `${blocc}_blocc`;
+	} else {
+		Blockly.defineBlocksWithJsonArray([blocc]);
+		type = blocc.type;
+	}
+	const bloccElem = document.createElement("block");
+	bloccElem.setAttribute("type", type);
+	return bloccElem;
+}
+function addblocc(bloccElem, category) {
+	document.getElementById("toolbox").querySelector(`category[name="${category}"]`).appendChild(bloccElem);
+	if(definedWorkspace) workspace.updateToolbox(toolbox);
+}
+function compile() {
+	console.log(Blockly.dfblocc.generate(workspace));
+	console.log(JSON.stringify(Blockly.dfblocc.generate(workspace)));
+	console.log(btoa(String.fromCharCode.apply(null, new Uint16Array(pako.gzip(JSON.stringify(Blockly.dfblocc.generate(workspace)))))))
+}
+function compileActionArgs(blocc) {
+	var array = [];
+	var currItem = blocc.getInputTargetBlock("args");
+	var i=0;
+	do {
+		var itemType = "";
+		switch(currItem.type) {
+			case "textvalue_blocc":
+				itemType = "txt";
+				break;
+			case "numbervalue_blocc":
+				itemType = "num";
+				break;
+		}
+		array.push({item: {
+			id: itemType,
+			data: {name: currItem.getFieldValue("value")}
+		}, slot: i})
+
+		i++;
+		currItem = currItem.getNextBlock();
+	} while (currItem != null);
+	return array;
 }
 
-console.log(getbloccJson("function"))
+Blockly.dfblocc = new Blockly.Generator("dfblocc");
+Blockly.dfblocc.generate = function(workspace) {
+	var json = {blocks: []};
+	const blocks = workspace.getTopBlocks(false);
+	blocks.forEach(blocc => {
+		if(blocc.type == "function_blocc") {
+			json.blocks.push(Blockly.dfblocc[blocc.type].call(this, blocc));
+			var currblocc = blocc.getInputTargetBlock("blox");
+			do {
+				json.blocks.push(Blockly.dfblocc[currblocc.type].call(this, currblocc));
+
+				currblocc = currblocc.getNextBlock();
+			} while (currblocc != null);
+		}
+	});
+	return json;
+}
+
+Blockly.dfblocc["function_blocc"] = blocc => {
+	return {
+		id: "block",
+		block: "func",
+		data: blocc.getFieldValue("name"),
+		args: {items: []}
+	}
+}
+Blockly.dfblocc["playeraction_blocc"] = blocc => {
+	return {
+		id: "block",
+		block: "player_action",
+		action: blocc.getFieldValue("action"),
+		args: {items: compileActionArgs(blocc)},
+		target: blocc.getFieldValue("target")
+	}
+}
 
 </script>
 <style>
@@ -15,51 +104,49 @@ console.log(getbloccJson("function"))
 	width: 100%;
 	height: 100%;
 }
+#errpop {
+	display: none;
+	border-color: black;
+	border-style: dotted;
+	width: calc(100% - 200px);
+	height: calc(100% - 200px);
+	font-size: calc(100% + 1vw + 1vh);
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 69420;
+}
+#unfoced {
+	display: none;
+}
 </style>
 <body>
+	<div id="unfoced"></div>
+	<div id="errpop">
+		<h3 style="margin-bottom: -30px;">Error</h3>
+		<p>something went wrong.</p><br>
+		<code id="errmsg"></code>
+	</div>
+
+	<button onclick="compile()">Export</button>
+
 	<div id="workspacediv" style="position: fixed;"></div>
 	<xml id="toolbox" style="display: none">
-		<category name="New Line">
-			<block type="function_blocc"></block>
-		</category>
-		<category name="Actions">
-			<block type="playeraction_blocc"></block>
-		</category>
+		<category name="New Line"></category>
+		<category name="Actions"></category>
+		<category name="Values"></category>
+		<category name="Variables"></category>
 	</xml>
 </body>
 
 <script>
-	Blockly.Blocks["function_blocc"] = {
-		init: function() {
-			this.jsonInit({
-				"type": "function",
-				"message0": "FUNCTION hidden %1 ? %2",
-				"args0": [
-				{
-					"type": "field_checkbox",
-					"name": "is variable hidden",
-					"checked": false
-				},
-				{
-					"type": "input_value",
-					"name": "Name",
-					"check": "String"
-				}
-				],
-					"colour": 225,
-					"tooltip": "New function",
-					"helpUrl": "https://github.com/userunp/dfscript"
-				})
-		}
-	};
-	Blockly.Blocks["playeraction_blocc"] = {
-		init: function() {
-			this.appendValueInput("VALUE").setCheck("String").appendField("length of");
-			this.setOutput(true, "Number");
-			this.setColour(160);
-			this.setTooltip("Do a player action");
-			this.setHelpUrl("");
-		}
-	};
-	var demoWorkspace = Blockly.inject("workspacediv", {toolbox: document.getElementById("toolbox")})
+addblocc(registerblocc("function"), "New Line");
+addblocc(registerblocc("playeraction"), "Actions");
+
+addblocc(registerblocc("textvalue"), "Values");
+addblocc(registerblocc("numbervalue"), "Values");
+
+const toolbox = document.getElementById("toolbox");
+var workspace = Blockly.inject("workspacediv", {toolbox: toolbox}); definedWorkspace = true;
 </script>
