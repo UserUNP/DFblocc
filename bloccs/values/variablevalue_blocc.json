@@ -1,0 +1,33 @@
+{
+	"type": "variablevalue_blocc",
+	"message0": "%1 Variable ❛❛ %2 ❟❟ %3",
+	"args0": [
+		{
+			"type": "field_image",
+			"src": "https://raw.githubusercontent.com/Owen1212055/mc-assets/main/assets/MAGMA_CREAM.png",
+			"width": 25,
+			"height": 25,
+			"alt": "Variable value",
+			"flipRtl": false
+		},
+		{
+			"type": "field_input",
+			"name": "value",
+			"text": "name"
+		},
+		{
+			"type": "field_dropdown",
+			"name": "scope",
+			"options": [
+				["GAME", "unsaved"],
+				["SAVE", "saved"],
+				["LOCAL","local"]
+			]
+		}
+	],
+	"previousStatement": null,
+	"nextStatement": null,
+	"colour": "0xe4c82f",
+	"tooltip": "",
+	"helpUrl": ""
+}
